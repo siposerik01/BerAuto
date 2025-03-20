@@ -37,7 +37,7 @@ class Rental(models.Model):
 
 class Invoice(models.Model):
     rental = models.OneToOneField(Rental, on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.IntegerField()
     issued_date = models.DateField(auto_now_add=True)
     paid = models.BooleanField(default=False)
 
