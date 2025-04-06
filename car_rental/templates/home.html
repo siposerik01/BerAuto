@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BérAutó Kezdőlap</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 30px;
+        }
+
+        h1 {
+            color: #2c3e50;
+        }
+
+        .button {
+            display: inline-block;
+            margin: 10px;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        .button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Üdvözöljük a BérAutó rendszerben!</h1>
+    <p>Ez a kezdőlap. Innen elérheti az API-kat:</p>
+
+    <a class="button" href="/api/register/">Regisztráció (POST)</a>
+    <a class="button" href="/api/cars/">Autók listája</a>
+    <a class="button" href="/api/rentals/">Kölcsönzések</a>
+    <a class="button" href="/api/invoices/">Számlák</a>
+    <a class="button" href="/api/token/">Bejelentkezés</a>
+
+</body>
+</html>
