@@ -7,7 +7,22 @@
             font-family: Arial, sans-serif;
             padding: 30px;
         }
-
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f5f5f5;
+            padding: 10px 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+        .navbar .nav-links {
+            display: flex;
+            gap: 15px;
+        }
+        .navbar .login-btn {
+            margin-left: auto;
+        }
         h1 {
             color: #2c3e50;
         }
@@ -21,21 +36,70 @@
             text-decoration: none;
             border-radius: 5px;
         }
-
+        
         .button:hover {
             background-color: #2980b9;
+        }
+        .car-list {
+            margin-top: 30px;
+        }
+        .car-item {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #fafcff;
+        }
+        .car-title {
+            font-weight: bold;
+            font-size: 1.1em;
         }
     </style>
 </head>
 <body>
+    <div class="navbar" style="width:100vw;left:0;top:0;position:fixed;z-index:100;box-sizing:border-box;border-radius:0;margin-bottom:0;">
+        <div class="nav-links">
+            <a href="/" class="button">Kezdőlap</a>
+        </div>
+        {% if user.is_authenticated %}
+            {% if user.is_admin %}
+                <a class="button login-btn" href="/admin_dashboard/">Admin</a>
+            {% elif user.is_agent %}
+                <a class="button login-btn" href="/agent_dashboard/">Ügyintéző</a>
+            {% else %}
+                <a class="button login-btn" href="/profil/">Profil</a>
+            {% endif %}
+        {% else %}
+            <a class="button login-btn" href="/login/">Bejelentkezés</a>
+        {% endif %}
+
+    </div>
+    <div style="height:60px;"></div>
     <h1>Üdvözöljük a BérAutó rendszerben!</h1>
-    <p>Ez a kezdőlap. Innen elérheti az API-kat:</p>
-
-    <a class="button" href="/api/register/">Regisztráció (POST)</a>
-    <a class="button" href="/api/cars/">Autók listája</a>
-    <a class="button" href="/api/rentals/">Kölcsönzések</a>
-    <a class="button" href="/api/invoices/">Számlák</a>
-    <a class="button" href="/api/token/">Bejelentkezés</a>
-
+    <p>Ez a kezdőlap. Az alábbiakban láthatóak a kölcsönözhető autók:</p>
+    <div class="car-list">
+        {% if cars %}
+            {% for car in cars %}
+                <div class="car-item">
+                    <div class="car-title">{{ car.brand }} {{ car.model }} ({{ car.year }})</div>
+                    <div>Kilométeróra: {{ car.mileage }} km</div>
+                    <div>Ár/nap: {{ car.price }} Ft</div>
+                    <div>Elérhető: {% if car.available %}Igen{% else %}Nem{% endif %}</div>
+                    {% if car.available %}
+                        {% if user.is_authenticated %}
+                            <form method="post" action="/rent/{{ car.id }}/" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="button">Kölcsönzés</button>
+                            </form>
+                        {% else %}
+                            <button class="button" onclick="alert('Jelentkezz be a kölcsönzéshez!')">Kölcsönzés</button>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <div>Nincs elérhető autó.</div>
+        {% endif %}
+    </div>
 </body>
 </html>

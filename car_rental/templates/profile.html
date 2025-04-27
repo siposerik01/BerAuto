@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Profilom</title>
+    <style>
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 18px;
+            font-size: 1em;
+            cursor: pointer;
+            text-decoration: none;
+            z-index: 200;
+        }
+        .back-btn:hover {
+            background-color: #2980b9;
+        }
+        .tabs { display: flex; border-bottom: 2px solid #ccc; margin-bottom: 20px; }
+        .tab { padding: 10px 30px; cursor: pointer; border: none; background: none; font-size: 1.1em; }
+        .tab.active { border-bottom: 3px solid #3498db; color: #3498db; font-weight: bold; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .profile-section { margin-top: 20px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        th { background-color: #f2f2f2; }
+    </style>
+    <script>
+        function showTab(tabIndex) {
+            var tabs = document.getElementsByClassName('tab');
+            var contents = document.getElementsByClassName('tab-content');
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+                contents[i].classList.remove('active');
+            }
+            tabs[tabIndex].classList.add('active');
+            contents[tabIndex].classList.add('active');
+        }
+        window.onload = function() { showTab(0); };
+    </script>
+</head>
+<body>
+    <a href="/" class="back-btn">Vissza a főoldalra</a>
+    <form method="post" action="/logout/" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="back-btn" style="right:220px; background-color:#e74c3c;">Kijelentkezés</button>
+    </form>
+    <h2>Profilom</h2>
+    <div class="tabs">
+        <button class="tab active" onclick="showTab(0)">Saját adataim</button>
+        <button class="tab" onclick="showTab(1)">Kölcsönzéseim</button>
+        <button class="tab" onclick="showTab(2)">Számláim</button>
+    </div>
+    <div class="tab-content active profile-section">
+        <h3>Saját adataim</h3>
+
+        <form method="post" action="">
+            {% csrf_token %}
+            <label for="username">Felhasználónév:</label>
+            <input type="text" id="username" name="username" value="{{ user.username|default_if_none:'' }}"><br><br>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" value="{{ user.email|default_if_none:'' }}"><br><br>
+            <label for="phone_number">Telefonszám:</label>
+            <input type="text" id="phone_number" name="phone_number" value="{{ user.phone_number|default_if_none:'' }}"><br><br>
+            <label for="address">Lakcím:</label>
+            <input type="text" id="address" name="address" value="{{ user.address|default_if_none:'' }}"><br><br>
+            <button type="submit">Mentés</button>
+        </form>
+    </div>
+    <div class="tab-content profile-section">
+        <h3>Kölcsönzéseim</h3>
+        {% if rentals %}
+        <table>
+            <tr>
+                <th>Autó</th>
+                <th>Kérés dátuma</th>
+                <th>Kezdet</th>
+                <th>Vége</th>
+                <th>Állapot</th>
+            </tr>
+            {% for rental in rentals %}
+            <tr>
+                <td>{{ rental.car }}</td>
+                <td>{{ rental.request_rental_date }}</td>
+                <td>{{ rental.start_date }}</td>
+                <td>{{ rental.end_date }}</td>
+                <td>{{ rental.status }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p>Nincs kölcsönzési előzmény.</p>
+        {% endif %}
+    </div>
+    <div class="tab-content profile-section">
+        <h3>Számláim</h3>
+        {% if invoices %}
+        <table>
+            <tr>
+                <th>Autó</th>
+                <th>Kérés dátuma</th>
+                <th>Kezdet</th>
+                <th>Vége</th>
+                <th>Összeg</th>
+                <th>Kelt</th>
+                <th>Fizetve</th>
+            </tr>
+            {% for invoice in invoices %}
+            <tr>
+                <td>{{ invoice.rental.car }}</td>
+                <td>{{ invoice.rental.request_rental_date }}</td>
+                <td>{{ invoice.rental.rental_date }}</td>
+                <td>{{ invoice.rental.return_date }}</td>
+                <td>{{ invoice.amount }} Ft</td>
+                <td>{{ invoice.issued_date }}</td>
+                <td>{{ invoice.paid|yesno:"Igen,Nem" }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p>Nincsenek kiállított számláid.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -27,8 +27,9 @@ class Rental(models.Model):
     car = models.ForeignKey(Car, on_delete=models.CASCADE)
     customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='rentals')
     agent = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='processed_rentals')
-    rental_date = models.DateField()
-    return_date = models.DateField()
+    request_rental_date = models.DateField()
+    rental_date = models.DateField(null=True, blank=True)
+    return_date = models.DateField(null=True, blank=True)
     is_approved = models.BooleanField(default=False)
     is_returned = models.BooleanField(default=False)
 

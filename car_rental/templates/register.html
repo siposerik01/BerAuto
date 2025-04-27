@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Regisztráció</title>
+</head>
+<body>
+    <h2>Regisztráció</h2>
+
+    {% if messages %}
+        {% for msg in messages %}
+            <p style="color:green;">{{ msg }}</p>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <label for="username">Felhasználónév:</label><br>
+        <input type="text" name="username" required><br><br>
+
+        <label for="email">E-mail:</label><br>
+        <input type="email" name="email" required><br><br>
+
+        <label for="password">Jelszó:</label><br>
+        <input type="password" name="password" required><br><br>
+
+        <label>
+            <input type="checkbox" name="is_customer">
+            Ügyfél vagyok
+        </label><br><br>
+
+        <label>
+            <input type="checkbox" name="is_agent">
+            Agent vagyok
+        </label><br><br>
+
+        <label>
+            <input type="checkbox" name="is_admin">
+            Admin vagyok
+        </label><br><br>
+
+        <button type="submit">Regisztráció</button>
+    </form>
+
+    <p>Már van fiókod? <a href="{% url 'login' %}">Jelentkezz be</a></p>
+</body>
+</html>

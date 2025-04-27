@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ügyintéző Kezelőfelület</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 30px; }
+        .tabs { display: flex; border-bottom: 2px solid #ccc; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab { padding: 10px 30px; cursor: pointer; border: none; background: none; font-size: 1.1em; }
+        .tab.active { border-bottom: 3px solid #3498db; color: #3498db; font-weight: bold; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        th { background-color: #f2f2f2; }
+        input, select { width: 100%; padding: 5px; }
+        button { padding: 6px 12px; margin-top: 5px; }
+        .button {
+            display: inline-block;
+            margin: 5px;
+            padding: 8px 15px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #2980b9;
+        }
+        .top-right-nav {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 100;
+        }
+    </style>
+    <script>
+        function showTab(tabIndex) {
+            var tabs = document.getElementsByClassName('tab');
+            var contents = document.getElementsByClassName('tab-content');
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+                contents[i].classList.remove('active');
+            }
+            tabs[tabIndex].classList.add('active');
+            contents[tabIndex].classList.add('active');
+        }
+        window.onload = function() { showTab(0); };
+    </script>
+</head>
+<body>
+    <div class="top-right-nav">
+        <a href="/" class="button">Vissza a főoldalra</a>
+        <form method="post" action="/logout/" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="button" style="background-color:#e74c3c;">Kijelentkezés</button>
+        </form>
+    </div>
+
+    <h2>Ügyintézői Kezelőfelület</h2>
+    <div class="tabs">
+        <button class="tab" onclick="showTab(0)">Saját adatok</button>
+        <button class="tab" onclick="showTab(1)">Kölcsönzések</button>
+    </div>
+
+    <!-- Saját adatok -->
+    <div class="tab-content">
+        <h3>Saját adatok</h3>
+        <form method="post" action="">
+            {% csrf_token %}
+            <label>Felhasználónév:</label>
+            <input type="text" name="username" value="{{ user.username }}"><br><br>
+            <label>Email:</label>
+            <input type="email" name="email" value="{{ user.email }}"><br><br>
+            <label>Telefonszám:</label>
+            <input type="text" name="phone_number" value="{{ user.phone_number }}"><br><br>
+            <label>Lakcím:</label>
+            <input type="text" name="address" value="{{ user.address }}"><br><br>
+            <button type="submit">Mentés</button>
+        </form>
+    </div>
+
+    <!-- Kölcsönzések + Számlák -->
+    <div class="tab-content">
+        <h3>Felhasználói kölcsönzések és számlák</h3>
+        {% for rental in rentals %}
+        <form method="post" action="{% url 'update_rental' rental.id %}">
+            {% csrf_token %}
+            <table>
+                <tr>
+                    <th>Felhasználó</th><th>Autó</th><th>Kérés dátuma</th><th>Kezdet</th><th>Vége</th><th>Jóváhagyva</th><th>Visszavéve</th><th>Művelet</th>
+                </tr>
+                <tr>
+                    <td>{{ rental.customer.username }}</td>
+                    <td>{{ rental.car }}</td>
+                    <td>{{ rental.request_rental_date }}</td>
+                    <td><input type="date" name="rental_date" value="{{ rental.rental_date|date:'Y-m-d' }}"></td>
+                    <td><input type="date" name="return_date" value="{{ rental.return_date|date:'Y-m-d' }}"></td>
+                    <td>
+                        <select name="is_approved">
+                            <option value="True" {% if rental.is_approved %}selected{% endif %}>Igen</option>
+                            <option value="False" {% if not rental.is_approved %}selected{% endif %}>Nem</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select name="is_returned">
+                            <option value="True" {% if rental.is_returned %}selected{% endif %}>Igen</option>
+                            <option value="False" {% if not rental.is_returned %}selected{% endif %}>Nem</option>
+                        </select>
+                    </td>
+                    <td><button type="submit">Mentés</button></td>
+                </tr>
+            </table>
+        </form>
+
+        {% if rental.is_returned and rental.rental_date and rental.return_date and not rental.invoice %}
+            <form method="post" action="{% url 'save_invoice' rental.id %}">
+                {% csrf_token %}
+                <button type="submit">Számla kiállítása</button>
+            </form>
+        {% endif %}
+
+        {% if rental.invoice %}
+            <form method="post" action="{% url 'save_invoice' rental.id rental.invoice.id %}">
+                {% csrf_token %}
+                <table style="margin-left: 30px;">
+                    <tr><th>Számla összeg</th><th>Kelt</th><th>Fizetve</th><th>Művelet</th></tr>
+                    <tr>
+                        <td><input type="number" name="amount" value="{{ rental.invoice.amount }}"></td>
+                        <td>{{ rental.invoice.issued_date }}</td>
+                        <td>
+                            <select name="paid">
+                                <option value="True" {% if rental.invoice.paid %}selected{% endif %}>Igen</option>
+                                <option value="False" {% if not rental.invoice.paid %}selected{% endif %}>Nem</option>
+                            </select>
+                        </td>
+                        <td><button type="submit">Mentés</button></td>
+                    </tr>
+                </table>
+            </form>
+        {% endif %}
+        <hr>
+        {% endfor %}
+    </div>
+</body>
+</html>

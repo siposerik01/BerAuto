@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Kezelőfelület</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 30px; }
+        .tabs { display: flex; border-bottom: 2px solid #ccc; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab { padding: 10px 30px; cursor: pointer; border: none; background: none; font-size: 1.1em; }
+        .tab.active { border-bottom: 3px solid #3498db; color: #3498db; font-weight: bold; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        th { background-color: #f2f2f2; }
+        input, select { width: 100%; padding: 5px; }
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 18px;
+            font-size: 1em;
+            cursor: pointer;
+            text-decoration: none;
+            z-index: 200;
+        }
+        .back-btn:hover {
+            background-color: #2980b9;
+        }
+
+    </style>
+    <script>
+        function showTab(tabIndex) {
+            var tabs = document.getElementsByClassName('tab');
+            var contents = document.getElementsByClassName('tab-content');
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+                contents[i].classList.remove('active');
+            }
+            tabs[tabIndex].classList.add('active');
+            contents[tabIndex].classList.add('active');
+        }
+        window.onload = function() { showTab(0); };
+    </script>
+</head>
+<body>
+    <div class="top-right-nav">
+        <a href="/" class="back-btn">Vissza a főoldalra</a>
+        <form method="post" action="/logout/" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="back-btn" style="right:220px; background-color:#e74c3c;">Kijelentkezés</button>
+        </form>
+    </div>
+    <h2>Admin Kezelőfelület</h2>
+    <div class="tabs">
+        <button class="tab" onclick="showTab(0)">Saját adatok</button>
+        <button class="tab" onclick="showTab(1)">Autók</button>
+        <button class="tab" onclick="showTab(2)">Kölcsönzések</button>
+        <button class="tab" onclick="showTab(3)">Felhasználók</button>
+    </div>
+
+    <!-- 1. SAJÁT ADATOK -->
+    <div class="tab-content">
+        <h3>Saját adatok</h3>
+        <form method="post" action="">
+            {% csrf_token %}
+            <label>Felhasználónév:</label>
+            <input type="text" name="username" value="{{ user.username }}"><br><br>
+            <label>Email:</label>
+            <input type="email" name="email" value="{{ user.email }}"><br><br>
+            <label>Telefonszám:</label>
+            <input type="text" name="phone_number" value="{{ user.phone_number }}"><br><br>
+            <label>Lakcím:</label>
+            <input type="text" name="address" value="{{ user.address }}"><br><br>
+            <button type="submit">Mentés</button>
+        </form>
+    </div>
+
+    <!-- 2. AUTÓK -->
+    <div class="tab-content">
+        <h3>Autók kezelése</h3>
+        {% for car in cars %}
+        <form method="post" action="{% url 'update_car' car.id %}">
+            {% csrf_token %}
+            <table>
+                <tr>
+                    <th>Márka</th><th>Model</th><th>Ár/nap</th><th>Elérhető</th><th>Km óra</th><th>Évjárat</th><th>Művelet</th>
+                </tr>
+                <tr>
+                    <td><input type="text" name="brand" value="{{ car.brand }}"></td>
+                    <td><input type="text" name="model" value="{{ car.model }}"></td>
+                    <td><input type="number" name="price" value="{{ car.price }}"></td>
+                    <td>
+                        <select name="available">
+                            <option value="True" {% if car.available %}selected{% endif %}>Igen</option>
+                            <option value="False" {% if not car.available %}selected{% endif %}>Nem</option>
+                        </select>
+                    </td>
+                    <td><input type="number" name="mileage" value="{{ car.mileage }}"></td>
+                    <td><input type="number" name="year" value="{{ car.year }}"></td>
+                    <td><button type="submit">Mentés</button></td>
+                </tr>
+            </table>
+        </form>
+        {% endfor %}
+
+        <h4>Új autó hozzáadása</h4>
+        <form method="post" action="{% url 'add_car' %}">
+            {% csrf_token %}
+            <input type="text" name="brand" placeholder="Márka">
+            <input type="text" name="model" placeholder="Model">
+            <input type="number" name="price" placeholder="Ár/nap">
+            <input type="number" name="mileage" placeholder="Km óra">
+            <input type="number" name="year" placeholder="Évjárat">
+
+            <label>
+                <input type="checkbox" name="is_available" checked>
+                Elérhető
+            </label><br><br>
+            <button type="submit">Hozzáadás</button>
+        </form>
+    </div>
+
+    <!-- 3. KÖLCSÖNZÉSEK -->
+<div class="tab-content">
+    <h3>Kölcsönzések</h3>
+    {% for rental in rentals %}
+    <form method="post" action="{% url 'update_rental' rental.id %}">
+        {% csrf_token %}
+        <table>
+            <tr>
+                <th>Felhasználó</th><th>Autó</th><th>Kérés dátuma</th><th>Kezdet</th><th>Vége</th>
+                <th>Jóváhagyva</th><th>Visszavéve</th><th>Művelet</th>
+            </tr>
+            <tr>
+                <td>{{ rental.customer.username }}</td>
+                <td>{{ rental.car }}</td>
+                <td><input type="date" name="request_rental_date" value="{{ rental.request_rental_date|date:'Y-m-d' }}" readonly></td>
+                <td><input type="date" name="rental_date" value="{{ rental.rental_date|date:'Y-m-d' }}"
+                           {% if not rental.is_approved %}disabled{% endif %}>
+                </td>
+                <td>
+                    <input type="date" name="return_date" value="{{ rental.return_date|date:'Y-m-d' }}"
+                            {% if not rental.is_approved or not rental.rental_date %}disabled{% endif %}>
+                </td>
+                <td>
+                    <select name="is_approved"
+                            {% if rental.rental_date %}disabled{% endif %}>
+                        <option value="True" {% if rental.is_approved %}selected{% endif %}>Igen</option>
+                        <option value="False" {% if not rental.is_approved %}selected{% endif %}>Nem</option>
+                    </select>
+                </td>
+                <td>
+                    <select name="is_returned">
+                        <option value="True" {% if rental.is_returned %}selected{% endif %}>Igen</option>
+                        <option value="False" {% if not rental.is_returned %}selected{% endif %}>Nem</option>
+                    </select>
+                </td>
+                <td><button type="submit">Mentés</button></td>
+            </tr>
+        </table>
+    </form>
+
+    {% if rental.is_returned and rental.rental_date and rental.return_date and not rental.invoice %}
+        <form method="post" action="{% url 'save_invoice' rental.id %}">
+            {% csrf_token %}
+            <button type="submit">💸 Számla kiállítása</button>
+        </form>
+    {% endif %}
+
+    {% if rental.invoice %}
+        <form method="post" action="{% url 'save_invoice' rental.id rental.invoice.id %}">
+            {% csrf_token %}
+            <table style="margin-left: 30px;">
+                <tr><th>Összeg</th><th>Kelt</th><th>Fizetve</th><th>Művelet</th></tr>
+                <tr>
+                    <td><input type="number" name="amount" value="{{ rental.invoice.amount }}"></td>
+                    <td>{{ rental.invoice.issued_date }}</td>
+                    <td>
+                        <select name="paid">
+                            <option value="True" {% if rental.invoice.paid %}selected{% endif %}>Igen</option>
+                            <option value="False" {% if not rental.invoice.paid %}selected{% endif %}>Nem</option>
+                        </select>
+                    </td>
+                    <td><button type="submit">Mentés</button></td>
+                </tr>
+            </table>
+        </form>
+    {% endif %}
+    <hr>
+    {% endfor %}
+</div>
+
+
+    <!-- 5. FELHASZNÁLÓK -->
+    <div class="tab-content">
+        <h3>Felhasználók</h3>
+        {% for u in users %}
+        <form method="post" action="{% url 'update_user' u.id %}">
+            {% csrf_token %}
+            <table>
+                <tr><th>Felhasználónév</th><th>Email</th><th>Szerepkörök</th><th>Művelet</th></tr>
+                <tr>
+                    <td><input type="text" name="username" value="{{ u.username }}"></td>
+                    <td><input type="email" name="email" value="{{ u.email }}"></td>
+                    <td>
+                        <label><input type="checkbox" name="is_customer" {% if u.is_customer %}checked{% endif %}> Ügyfél</label><br>
+                        <label><input type="checkbox" name="is_agent" {% if u.is_agent %}checked{% endif %}> Ügyintéző</label><br>
+                        <label><input type="checkbox" name="is_admin" {% if u.is_admin %}checked{% endif %}> Admin</label>
+                    </td>
+                    <td><button type="submit">Mentés</button></td>
+                </tr>
+            </table>
+        </form>
+        {% endfor %}
+    </div>
+</body>
+</html>
